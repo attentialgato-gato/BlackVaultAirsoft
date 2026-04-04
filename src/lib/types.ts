@@ -233,42 +233,36 @@ export const TRANSACTION_TYPE_LABELS: Record<TransactionType, string> = {
 };
 
 // ─── Common Calibers ──────────────────────────────────────────
+// ─── Common Calibers (BB Weights for Airsoft) ─────────────────
 export const COMMON_CALIBERS = [
-  "9mm Luger",
-  ".45 ACP",
-  ".40 S&W",
-  ".380 ACP",
-  "10mm Auto",
-  ".357 Magnum",
-  ".38 Special",
-  ".44 Magnum",
-  "5.56x45mm NATO",
-  ".223 Remington",
-  ".308 Winchester",
-  "7.62x39mm",
-  ".300 BLK",
-  "6.5 Creedmoor",
-  ".243 Winchester",
-  ".30-06 Springfield",
-  "12 Gauge",
-  "20 Gauge",
-  ".410 Bore",
-  ".22 LR",
-  ".17 HMR",
-  ".22 WMR",
+  "0.12g",
+  "0.20g",
+  "0.23g",
+  "0.25g",
+  "0.28g",
+  "0.30g",
+  "0.32g",
+  "0.36g",
+  "0.40g",
 ];
 
 export const BULLET_TYPES = [
-  "FMJ",
-  "HP",
-  "JHP",
-  "OTM",
-  "Frangible",
-  "Tracer",
-  "Subsonic",
-  "Soft Point",
-  "Match",
+  "Non-Bio",
+  "Bio",
+  "Tracer Non-Bio",
+  "Tracer Bio",
   "Other",
 ] as const;
+
+// ─── AIRSOFT FORK: Drive Systems ──────────────────────────────
+export const DRIVE_SYSTEMS = [
+  "AEG",
+  "AEP",
+  "GBB",
+  "HPA",
+  "Spring",
+  "CO2",
+] as const;
+
 
 export type BulletType = (typeof BULLET_TYPES)[number];

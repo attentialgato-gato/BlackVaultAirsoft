@@ -24,15 +24,15 @@ import { useState, useEffect } from "react";
 
 const PRIMARY_NAV_ITEMS = [
   { label: "Command", href: "/", icon: Zap, description: "Overview & stats" },
-  { label: "Vault", href: "/vault", icon: Shield, description: "Firearms inventory" },
-  { label: "Builds", href: "/builds", icon: Layers, description: "Build configurations" },
+  { label: "Replicas", href: "/vault", icon: Shield, description: "Replica inventory" },
+  { label: "Loadout", href: "/builds", icon: Layers, description: "Loadout configurations" },
   { label: "Accessories", href: "/accessories", icon: Crosshair, description: "Parts & attachments" },
-  { label: "Ammo", href: "/ammo", icon: Target, description: "Ammunition storage" },
+  { label: "BBs", href: "/ammo", icon: Target, description: "Ammunition storage" },
 ] as const;
 
 const RANGE_CHILD_ITEMS = [
-  { label: "Log Range Session", href: "/range/log-session", icon: Target },
-  { label: "Range Session History", href: "/range/session-history", icon: History },
+  { label: "Log Game Session", href: "/range/log-session", icon: Target },
+  { label: "Game Session History", href: "/range/session-history", icon: History },
   { label: "Log a Drill", href: "/range/log-drill", icon: Timer },
   { label: "Drill Performance", href: "/range/drill-performance", icon: Timer },
   { label: "Drill Library", href: "/range/drill-library", icon: Library },

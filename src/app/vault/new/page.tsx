@@ -5,7 +5,7 @@ import ImagePicker from "@/components/shared/ImagePicker";
 import { HelpTip } from "@/components/shared/HelpTip";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { FIREARM_TYPES, FIREARM_TYPE_LABELS, COMMON_CALIBERS } from "@/lib/types";
+import { FIREARM_TYPES, FIREARM_TYPE_LABELS, DRIVE_SYSTEMS } from "@/lib/types";
 import { ArrowLeft, Plus, Loader2, AlertCircle } from "lucide-react";
 
 const INPUT_CLASS =
@@ -18,19 +18,8 @@ export default function NewFirearmPage() {
   const [error, setError] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [caliberInput, setCaliberInput] = useState("");
-  const [caliberDropdownOpen, setCaliberDropdownOpen] = useState(false);
-  const [compatCaliberTags, setCompatCaliberTags] = useState<string[]>([]);
-  const [compatCaliberInput, setCompatCaliberInput] = useState("");
-  const [compatCaliberDropdownOpen, setCompatCaliberDropdownOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const caliberRef = useRef<HTMLDivElement>(null);
-
-  const filteredCalibers = COMMON_CALIBERS.filter((c) =>
-    c.toLowerCase().includes(caliberInput.toLowerCase())
-  );
-  const showCustomCaliberOption =
-    caliberInput.trim() !== "" &&
-    !COMMON_CALIBERS.some((c) => c.toLowerCase() === caliberInput.toLowerCase().trim());
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -43,7 +32,7 @@ export default function NewFirearmPage() {
     const nameVal = (data.get("name") as string) ?? "";
     const errors: Record<string, string> = {};
     if (!nameVal.trim()) errors.name = "Name is required";
-    if (!caliberInput.trim()) errors.caliber = "Caliber is required";
+    if (!caliberInput.trim()) errors.caliber = "Drive System is required";
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       setLoading(false);
@@ -56,7 +45,7 @@ export default function NewFirearmPage() {
       manufacturer: data.get("manufacturer") as string,
       model: data.get("model") as string,
       caliber: caliberInput,
-      compatibleCalibers: compatCaliberTags.length > 0 ? compatCaliberTags.join(",") : null,
+      compatibleCalibers: null,
       serialNumber: data.get("serialNumber") as string,
       type: data.get("type") as string,
       acquisitionDate: data.get("acquisitionDate") as string,
@@ -105,14 +94,14 @@ export default function NewFirearmPage() {
         </Link>
         <span className="text-vault-border">/</span>
         <h1 className="text-sm font-semibold text-vault-text tracking-wide uppercase">
-          Add Firearm
+          Add Replica
         </h1>
       </div>
 
       <div className="max-w-2xl mx-auto px-6 py-8">
         <div className="mb-8">
-          <h2 className="text-xl font-bold text-vault-text mb-1">New Firearm Entry</h2>
-          <p className="text-sm text-vault-text-muted">Register a new firearm in the vault.</p>
+          <h2 className="text-xl font-bold text-vault-text mb-1">New Replica Entry</h2>
+          <p className="text-sm text-vault-text-muted">Register a new replica in the vault.</p>
         </div>
 
         {error && (
@@ -131,14 +120,14 @@ export default function NewFirearmPage() {
 
             <div>
               <label htmlFor="name" className={LABEL_CLASS}>
-                Firearm Name <span className="text-[#E53935]">*</span>
+                Replica Name <span className="text-[#E53935]">*</span>
               </label>
               <input
                 id="name"
                 name="name"
                 type="text"
                 required
-                placeholder="e.g. My Glock 19"
+                placeholder="e.g. My Tokyo Marui M4"
                 className={INPUT_CLASS}
                 onChange={() => setFormErrors(prev => ({ ...prev, name: "" }))}
               />
@@ -154,7 +143,7 @@ export default function NewFirearmPage() {
                   id="manufacturer"
                   name="manufacturer"
                   type="text"
-                  placeholder="e.g. Glock"
+                  placeholder="e.g. Tokyo Marui"
                   className={INPUT_CLASS}
                 />
               </div>
@@ -166,65 +155,37 @@ export default function NewFirearmPage() {
                   id="model"
                   name="model"
                   type="text"
-                  placeholder="e.g. G19 Gen5"
+                  placeholder="e.g. M4A1 MWS"
                   className={INPUT_CLASS}
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Caliber Combobox */}
-              <div>
+              {/* Drive System */}
+              <div ref={caliberRef}>
                 <label className={LABEL_CLASS}>
-                  Caliber <span className="text-[#E53935]">*</span>
+                  Drive System <span className="text-[#E53935]">*</span>
                 </label>
-                <div className="relative" ref={caliberRef}>
-                  <input
-                    type="text"
-                    value={caliberInput}
-                    onChange={(e) => {
-                      setCaliberInput(e.target.value);
-                      setCaliberDropdownOpen(true);
-                      setFormErrors(prev => ({ ...prev, caliber: "" }));
-                    }}
-                    onFocus={() => setCaliberDropdownOpen(true)}
-                    onBlur={() => setCaliberDropdownOpen(false)}
-                    placeholder="e.g. 9mm Luger"
-                    className={INPUT_CLASS}
-                  />
-                  {caliberDropdownOpen && (filteredCalibers.length > 0 || showCustomCaliberOption) && (
-                    <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-vault-surface border border-vault-border rounded-md shadow-lg max-h-48 overflow-y-auto">
-                      {filteredCalibers.map((c) => (
-                        <button
-                          key={c}
-                          type="button"
-                          onPointerDown={(e) => e.preventDefault()}
-                          onClick={() => {
-                            setCaliberInput(c);
-                            setCaliberDropdownOpen(false);
-                          }}
-                          className="w-full text-left px-3 py-2 text-sm text-vault-text hover:bg-vault-border hover:text-[#00C2FF] transition-colors font-mono"
-                        >
-                          {c}
-                        </button>
-                      ))}
-                      {showCustomCaliberOption && (
-                        <button
-                          type="button"
-                          onPointerDown={(e) => e.preventDefault()}
-                          onClick={() => {
-                            setCaliberInput(caliberInput.trim());
-                            setCaliberDropdownOpen(false);
-                          }}
-                          className="w-full text-left px-3 py-2 text-sm text-[#00C2FF] hover:bg-vault-border transition-colors font-mono border-t border-vault-border"
-                        >
-                          + Use &quot;{caliberInput.trim()}&quot;
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-                {formErrors.caliber && <p className="text-xs mt-1" style={{ color: "#E53935" }}>{formErrors.caliber}</p>}
+                <select
+                  name="caliber"
+                  value={caliberInput}
+                  onChange={(e) => {
+                    setCaliberInput(e.target.value);
+                    setFormErrors(prev => ({ ...prev, caliber: "" }));
+                  }}
+                  className={INPUT_CLASS}
+                >
+                  <option value="">Select drive system...</option>
+                  {DRIVE_SYSTEMS.map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+                {formErrors.caliber && (
+                  <p className="text-xs mt-1" style={{ color: "#E53935" }}>
+                    {formErrors.caliber}
+                  </p>
+                )}
               </div>
 
               {/* Type */}
@@ -243,111 +204,9 @@ export default function NewFirearmPage() {
               </div>
             </div>
 
-            {/* Compatible Calibers Tag Input */}
-            <div>
-              <label className={LABEL_CLASS}>
-                Compatible Calibers
-                <HelpTip text="Other calibers this firearm can safely fire (e.g. a 5.56 rifle that also accepts .223 Rem)." />
-              </label>
-              {compatCaliberTags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mb-2">
-                  {compatCaliberTags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="inline-flex items-center gap-1 bg-[#00C2FF]/10 border border-[#00C2FF]/30 text-[#00C2FF] text-xs font-mono rounded px-2 py-0.5"
-                    >
-                      {tag}
-                      <button
-                        type="button"
-                        onClick={() => setCompatCaliberTags((prev) => prev.filter((t) => t !== tag))}
-                        className="hover:text-white transition-colors ml-0.5"
-                        aria-label={`Remove ${tag}`}
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-              <div className="relative">
-                <input
-                  type="text"
-                  value={compatCaliberInput}
-                  onChange={(e) => {
-                    setCompatCaliberInput(e.target.value);
-                    setCompatCaliberDropdownOpen(true);
-                  }}
-                  onFocus={() => setCompatCaliberDropdownOpen(true)}
-                  onBlur={() => setCompatCaliberDropdownOpen(false)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Backspace" && compatCaliberInput === "") {
-                      e.preventDefault();
-                      setCompatCaliberTags(prev => prev.slice(0, -1));
-                      return;
-                    }
-                    if ((e.key === "Enter" || e.key === ",") && compatCaliberInput.trim()) {
-                      e.preventDefault();
-                      const val = compatCaliberInput.trim().replace(/,$/, "");
-                      if (val && !compatCaliberTags.includes(val)) {
-                        setCompatCaliberTags((prev) => [...prev, val]);
-                      }
-                      setCompatCaliberInput("");
-                      setCompatCaliberDropdownOpen(false);
-                    }
-                  }}
-                  placeholder="e.g. .223 Rem (press Enter to add)"
-                  className={INPUT_CLASS}
-                />
-                {compatCaliberDropdownOpen && compatCaliberInput.trim() !== "" && (
-                  <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-vault-surface border border-vault-border rounded-md shadow-lg max-h-48 overflow-y-auto">
-                    {COMMON_CALIBERS.filter(
-                      (c) =>
-                        c.toLowerCase().includes(compatCaliberInput.toLowerCase()) &&
-                        !compatCaliberTags.includes(c)
-                    ).map((c) => (
-                      <button
-                        key={c}
-                        type="button"
-                        onPointerDown={(e) => e.preventDefault()}
-                        onClick={() => {
-                          if (!compatCaliberTags.includes(c)) {
-                            setCompatCaliberTags((prev) => [...prev, c]);
-                          }
-                          setCompatCaliberInput("");
-                          setCompatCaliberDropdownOpen(false);
-                        }}
-                        className="w-full text-left px-3 py-2 text-sm text-vault-text hover:bg-vault-border hover:text-[#00C2FF] transition-colors font-mono"
-                      >
-                        {c}
-                      </button>
-                    ))}
-                    {!COMMON_CALIBERS.some((c) => c.toLowerCase() === compatCaliberInput.toLowerCase().trim()) && (
-                      <button
-                        type="button"
-                        onPointerDown={(e) => e.preventDefault()}
-                        onClick={() => {
-                          const val = compatCaliberInput.trim();
-                          if (val && !compatCaliberTags.includes(val)) {
-                            setCompatCaliberTags((prev) => [...prev, val]);
-                          }
-                          setCompatCaliberInput("");
-                          setCompatCaliberDropdownOpen(false);
-                        }}
-                        className="w-full text-left px-3 py-2 text-sm text-[#00C2FF] hover:bg-vault-border transition-colors font-mono border-t border-vault-border"
-                      >
-                        + Use &quot;{compatCaliberInput.trim()}&quot;
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-              <p className="text-xs text-vault-text-faint mt-1">Other calibers this firearm can safely fire. Optional.</p>
-            </div>
-
             <div>
               <label htmlFor="serialNumber" className={LABEL_CLASS}>
                 Serial Number
-                <HelpTip text="Found on the receiver or frame. Stored as plain text in your local database." />
               </label>
               <input
                 id="serialNumber"
@@ -356,7 +215,6 @@ export default function NewFirearmPage() {
                 placeholder="e.g. ABC123456"
                 className={`${INPUT_CLASS} font-mono`}
               />
-              <p className="text-xs text-vault-text-faint mt-1">Must be unique across all firearms in vault.</p>
             </div>
           </fieldset>
 
@@ -385,7 +243,7 @@ export default function NewFirearmPage() {
                   Purchase Price
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-vault-text-faint text-sm">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-vault-text-faint text-sm">€</span>
                   <input
                     id="purchasePrice"
                     name="purchasePrice"
@@ -400,10 +258,10 @@ export default function NewFirearmPage() {
               <div>
                 <label htmlFor="currentValue" className={LABEL_CLASS}>
                   Current Value
-                  <HelpTip text="Estimated current market value. Used for insurance records and total portfolio value on the dashboard." />
+                  <HelpTip text="Estimated current market value." />
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-vault-text-faint text-sm">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-vault-text-faint text-sm">€</span>
                   <input
                     id="currentValue"
                     name="currentValue"
@@ -425,8 +283,8 @@ export default function NewFirearmPage() {
             </legend>
             <div>
               <label htmlFor="initialRoundCount" className={LABEL_CLASS}>
-                Existing Round Count
-                <HelpTip text="If this firearm has already been used, enter the approximate round count. This will be logged as a pre-existing use entry." />
+                Existing BB Count
+                <HelpTip text="If this replica has already been used, enter the approximate BB count." />
               </label>
               <input
                 id="initialRoundCount"
@@ -434,7 +292,7 @@ export default function NewFirearmPage() {
                 type="number"
                 min="0"
                 step="1"
-                placeholder="e.g. 500 (leave blank if new)"
+                placeholder="e.g. 5000 (leave blank if new)"
                 className={INPUT_CLASS}
               />
             </div>
@@ -445,7 +303,6 @@ export default function NewFirearmPage() {
             <legend className="text-xs font-mono uppercase tracking-widest text-[#00C2FF] px-1 -ml-1">
               Maintenance
             </legend>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="lastMaintenanceDate" className={LABEL_CLASS}>Last Maintenance</label>
@@ -454,9 +311,9 @@ export default function NewFirearmPage() {
               <div>
                 <label htmlFor="maintenanceIntervalDays" className={LABEL_CLASS}>
                   Maintenance Interval (days)
-                  <HelpTip text="How often this firearm should be cleaned and inspected. Leave blank to disable maintenance reminders." />
+                  <HelpTip text="How often this replica should be cleaned and inspected." />
                 </label>
-                <input id="maintenanceIntervalDays" name="maintenanceIntervalDays" type="number" min="1" step="1" placeholder="e.g. 180" className={INPUT_CLASS} />
+                <input id="maintenanceIntervalDays" name="maintenanceIntervalDays" type="number" min="1" step="1" placeholder="e.g. 90" className={INPUT_CLASS} />
               </div>
             </div>
           </fieldset>
@@ -482,7 +339,7 @@ export default function NewFirearmPage() {
                 id="notes"
                 name="notes"
                 rows={3}
-                placeholder="Any additional notes about this firearm..."
+                placeholder="Any additional notes about this replica..."
                 className={`${INPUT_CLASS} resize-none`}
               />
             </div>
