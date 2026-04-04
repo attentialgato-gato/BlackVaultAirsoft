@@ -6,7 +6,16 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { VaultButton, VaultInput } from "@/components/shared/ui-primitives";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import {
-  Target, Plus, Loader2, AlertCircle, ChevronDown, ChevronUp, MapPin, TrendingDown,
+  Target,
+  Plus,
+  Loader2,
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+  MapPin,
+  TrendingDown,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 
 interface AmmoStock {
@@ -66,6 +75,14 @@ function AddBBsModal({ stock, onClose, onSuccess }: { stock: AmmoStock; onClose:
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [totalCost, setTotalCost] = useState("");
+  const [pricePerRound, setPricePerRound] = useState("");
+  const [purchaseDate, setPurchaseDate] = useState("");
+
+  function parsedQtyForCalc(): number {
+    const n = Number.parseInt(qty, 10);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  }
 
   const bbPerBag = stock.grainWeight;
   const totalToAdd = bags && bbPerBag ? Number(bags) * bbPerBag : 0;
@@ -82,7 +99,14 @@ function AddBBsModal({ stock, onClose, onSuccess }: { stock: AmmoStock; onClose:
     const res = await fetch(`/api/ammo/${stock.id}/transactions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "PURCHASE", quantity: qty, note: note || undefined }),
+body: JSON.stringify({
+  type: "PURCHASE",
+  quantity: qty,
+  note: note || undefined,
+  purchasePrice: totalCost ? Number(totalCost) : undefined,
+  pricePerRound: pricePerRound ? Number(pricePerRound) : undefined,
+  purchaseDate: purchaseDate || undefined,
+}),
     });
     const json = await res.json();
     if (!res.ok) { setError(json.error ?? "Failed"); setSubmitting(false); }
@@ -113,9 +137,20 @@ function AddBBsModal({ stock, onClose, onSuccess }: { stock: AmmoStock; onClose:
               {bbPerBag ? "Bags to Add" : "BBs to Add"} <span className="text-[#E53935]">*</span>
             </label>
             <VaultInput
-              type="number" min={1} required value={bags}
-              onChange={(e) => setBags(e.target.value)}
-              placeholder={bbPerBag ? "e.g. 3" : "e.g. 4000"}
+                  type="number"
+                  min={1}
+                  required
+                  value={bags}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setBags(val);
+                    const bagsNum = Number.parseInt(val, 10);
+                    const qty = bbPerBag ? bagsNum * bbPerBag : bagsNum;
+                    if (Number.isFinite(qty) && qty > 0 && pricePerRound) {
+                      setTotalCost((Number(pricePerRound) * qty).toFixed(2));
+                    }
+                  }}
+placeholder={bbPerBag ? "e.g. 3" : "e.g. 4000"}
               className="w-full bg-vault-bg border border-vault-border text-vault-text rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#00C2FF] placeholder-vault-text-faint"
             />
             {bbPerBag && totalToAdd > 0 && (
@@ -126,6 +161,52 @@ function AddBBsModal({ stock, onClose, onSuccess }: { stock: AmmoStock; onClose:
             <label className="block text-[10px] uppercase tracking-widest text-vault-text-muted mb-1.5">Note</label>
             <VaultInput type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. New purchase"
               className="w-full bg-vault-bg border border-vault-border text-vault-text rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#00C2FF] placeholder-vault-text-faint"
+            />
+          </div>
+          {/* Purchase Details */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] uppercase tracking-widest text-vault-text-muted mb-1.5">Total Cost ($)</label>
+              <VaultInput
+                type="number"
+                min={0}
+                step="0.01"
+                value={totalCost}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setTotalCost(val);
+                  const qtyNum = parsedQtyForCalc();
+                  if (qtyNum > 0 && val) setPricePerRound((Number(val) / qtyNum).toFixed(4));
+                }}
+                placeholder="e.g. 24.99"
+                className="w-full bg-vault-bg border border-vault-border text-vault-text rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#00C2FF] placeholder-vault-text-faint"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase tracking-widest text-vault-text-muted mb-1.5">Price / Round ($)</label>
+              <VaultInput
+                type="number"
+                min={0}
+                step="0.0001"
+                value={pricePerRound}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setPricePerRound(val);
+                  const qtyNum = parsedQtyForCalc();
+                  if (qtyNum > 0 && val) setTotalCost((Number(val) * qtyNum).toFixed(2));
+                }}
+                placeholder="e.g. 0.0499"
+                className="w-full bg-vault-bg border border-vault-border text-vault-text rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#00C2FF] placeholder-vault-text-faint"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-[10px] uppercase tracking-widest text-vault-text-muted mb-1.5">Purchase Date</label>
+            <VaultInput
+              type="date"
+              value={purchaseDate}
+              onChange={(e) => setPurchaseDate(e.target.value)}
+              className="w-full bg-vault-bg border border-vault-border text-vault-text rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#00C2FF]"
             />
           </div>
           <div className="flex gap-2 justify-end pt-2">
@@ -141,7 +222,169 @@ function AddBBsModal({ stock, onClose, onSuccess }: { stock: AmmoStock; onClose:
   );
 }
 
-function LogUseModal({ stock, onClose, onSuccess }: { stock: AmmoStock; onClose: () => void; onSuccess: (stockId: string, newQty: number) => void; }) {
+function EditAmmoModal({
+  stock,
+  onClose,
+  onSuccess,
+}: {
+  stock: AmmoStock;
+  onClose: () => void;
+  onSuccess: (updated: AmmoStock) => void;
+}) {
+  const [caliber, setCaliber] = useState(stock.caliber);
+  const [brand, setBrand] = useState(stock.brand);
+  const [grainWeight, setGrainWeight] = useState(stock.grainWeight?.toString() ?? "");
+  const [bulletType, setBulletType] = useState(stock.bulletType ?? "");
+  const [storageLocation, setStorageLocation] = useState(stock.storageLocation ?? "");
+  const [lowStockAlert, setLowStockAlert] = useState(stock.lowStockAlert?.toString() ?? "");
+  const [notes, setNotes] = useState(stock.notes ?? "");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!caliber.trim() || !brand.trim()) {
+      setError("BB Weight and brand are required.");
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    const res = await fetch(`/api/ammo/${stock.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        caliber: caliber.trim(),
+        brand: brand.trim(),
+        grainWeight: grainWeight ? Number(grainWeight) : null,
+        bulletType: bulletType.trim() || null,
+        storageLocation: storageLocation.trim() || null,
+        lowStockAlert: lowStockAlert ? Number(lowStockAlert) : null,
+        notes: notes.trim() || null,
+      }),
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      setError(json.error ?? "Failed to update");
+      setSubmitting(false);
+    } else {
+      onSuccess(json as AmmoStock);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-vault-bg/80 backdrop-blur-sm">
+      <div className="bg-vault-surface border border-vault-border rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <h3 className="text-sm font-semibold text-vault-text mb-4">Edit BB Stock</h3>
+        {error && (
+          <div className="flex items-center gap-2 bg-[#E53935]/10 border border-[#E53935]/30 rounded px-3 py-2 mb-4">
+            <AlertCircle className="w-4 h-4 text-[#E53935] shrink-0" />
+            <p className="text-xs text-[#E53935]">{error}</p>
+          </div>
+        )}
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] uppercase tracking-widest text-vault-text-muted mb-1.5">
+                BB Weight <span className="text-[#E53935]">*</span>
+              </label>
+              <VaultInput
+                type="text"
+                required
+                value={caliber}
+                onChange={(e) => setCaliber(e.target.value)}
+                className="w-full bg-vault-bg border border-vault-border text-vault-text rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#00C2FF]"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase tracking-widest text-vault-text-muted mb-1.5">
+                Brand <span className="text-[#E53935]">*</span>
+              </label>
+              <VaultInput
+                type="text"
+                required
+                value={brand}
+                onChange={(e) => setBrand(e.target.value)}
+                className="w-full bg-vault-bg border border-vault-border text-vault-text rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#00C2FF]"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] uppercase tracking-widest text-vault-text-muted mb-1.5">BBs per Bag</label>
+              <VaultInput
+                type="number"
+                min={0}
+                step="1"
+                value={grainWeight}
+                onChange={(e) => setGrainWeight(e.target.value)}
+                placeholder="e.g. 4000"
+                className="w-full bg-vault-bg border border-vault-border text-vault-text rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#00C2FF] placeholder-vault-text-faint"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase tracking-widest text-vault-text-muted mb-1.5">Type</label>
+              <VaultInput
+                type="text"
+                value={bulletType}
+                onChange={(e) => setBulletType(e.target.value)}
+                placeholder="e.g. Bio"
+                className="w-full bg-vault-bg border border-vault-border text-vault-text rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#00C2FF] placeholder-vault-text-faint"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-[10px] uppercase tracking-widest text-vault-text-muted mb-1.5">Storage Location</label>
+            <VaultInput
+              type="text"
+              value={storageLocation}
+              onChange={(e) => setStorageLocation(e.target.value)}
+              placeholder="e.g. Shelf A"
+              className="w-full bg-vault-bg border border-vault-border text-vault-text rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#00C2FF] placeholder-vault-text-faint"
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] uppercase tracking-widest text-vault-text-muted mb-1.5">Low Stock Alert (bags)</label>
+            <VaultInput
+              type="number"
+              min={0}
+              value={lowStockAlert}
+              onChange={(e) => setLowStockAlert(e.target.value)}
+              placeholder="e.g. 2"
+              className="w-full bg-vault-bg border border-vault-border text-vault-text rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#00C2FF] placeholder-vault-text-faint"
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] uppercase tracking-widest text-vault-text-muted mb-1.5">Notes</label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              placeholder="Optional notes"
+              className="w-full bg-vault-bg border border-vault-border text-vault-text rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#00C2FF] placeholder-vault-text-faint resize-none"
+            />
+          </div>
+          <div className="flex gap-2 justify-end pt-2">
+            <VaultButton type="button" onClick={onClose} variant="ghost">Cancel</VaultButton>
+            <VaultButton type="submit" disabled={submitting}>
+              {submitting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Pencil className="w-3 h-3" />}
+              Save
+            </VaultButton>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function LogUseModal({
+  stock,
+  onClose,
+  onSuccess,
+}: {
+  stock: AmmoStock;
+  onClose: () => void;
+  onSuccess: (stockId: string, newQty: number) => void;
+}) {
   const [bags, setBags] = useState("");
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -226,6 +469,9 @@ export default function AmmoPage() {
   const [expandedCalibers, setExpandedCalibers] = useState<Set<string>>(new Set());
   const [addModal, setAddModal] = useState<AmmoStock | null>(null);
   const [logModal, setLogModal] = useState<AmmoStock | null>(null);
+  const [editModal, setEditModal] = useState<AmmoStock | null>(null);
+  const [deleteConfirmStock, setDeleteConfirmStock] = useState<AmmoStock | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -244,6 +490,50 @@ export default function AmmoPage() {
     })));
   }
 
+  function handleStockEdit(updated: AmmoStock) {
+    setGroups((prev) => {
+      // Find which group currently holds this stock
+      const oldGroup = prev.find((g) => g.stocks.some((s) => s.id === updated.id));
+      if (!oldGroup) return prev;
+
+      const caliberChanged = oldGroup.caliber !== updated.caliber;
+
+      if (!caliberChanged) {
+        // Simple in-place update
+        return prev.map((g) => {
+          if (g.caliber !== oldGroup.caliber) return g;
+          const newStocks = g.stocks.map((s) => (s.id === updated.id ? updated : s));
+          return { ...g, stocks: newStocks, totalQuantity: newStocks.reduce((sum, s) => sum + s.quantity, 0) };
+        });
+      }
+
+      // Remove from old group (drop the group if empty)
+      const withoutOld = prev
+        .map((g) => {
+          if (g.caliber !== oldGroup.caliber) return g;
+          const newStocks = g.stocks.filter((s) => s.id !== updated.id);
+          if (newStocks.length === 0) return null;
+          return { ...g, stocks: newStocks, totalQuantity: newStocks.reduce((sum, s) => sum + s.quantity, 0) };
+        })
+        .filter(Boolean) as typeof prev;
+
+      // Insert into new caliber group (create if not exists)
+      const existingNewGroup = withoutOld.find((g) => g.caliber === updated.caliber);
+      if (existingNewGroup) {
+        return withoutOld.map((g) => {
+          if (g.caliber !== updated.caliber) return g;
+          const newStocks = [...g.stocks, updated];
+          return { ...g, stocks: newStocks, totalQuantity: newStocks.reduce((sum, s) => sum + s.quantity, 0) };
+        });
+      } else {
+        return [
+          ...withoutOld,
+          { caliber: updated.caliber, stocks: [updated], totalQuantity: updated.quantity },
+        ].sort((a, b) => a.caliber.localeCompare(b.caliber));
+      }
+    });
+  }
+
   function toggleCaliber(caliber: string) {
     setExpandedCalibers((prev) => {
       const next = new Set(prev);
@@ -252,7 +542,30 @@ export default function AmmoPage() {
     });
   }
 
-  const totalBBs = groups.reduce((sum, g) => sum + g.totalQuantity, 0);
+function handleDeleteStock(stock: AmmoStock) {
+  setDeleteConfirmStock(stock);
+}
+
+async function confirmDeleteStock() {
+  if (!deleteConfirmStock) return;
+  setDeleting(true);
+  const res = await fetch(`/api/ammo/${deleteConfirmStock.id}`, { method: "DELETE" });
+  if (res.ok) {
+    setGroups((prev) =>
+      prev
+        .map((g) => {
+          const newStocks = g.stocks.filter((s) => s.id !== deleteConfirmStock.id);
+          if (newStocks.length === 0) return null;
+          return { ...g, stocks: newStocks, totalQuantity: newStocks.reduce((sum, s) => sum + s.quantity, 0) };
+        })
+        .filter(Boolean) as typeof prev
+    );
+    setDeleteConfirmStock(null);
+  }
+  setDeleting(false);
+}
+
+const totalBBs = groups.reduce((sum, g) => sum + g.totalQuantity, 0);
 
   return (
     <div className="min-h-full">
@@ -293,7 +606,7 @@ export default function AmmoPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
             {groups.map((group) => {
               const worstStatus = group.stocks.reduce<string>((worst, s) => {
                 const st = stockStatus(s.quantity, s.lowStockAlert);
@@ -381,11 +694,29 @@ export default function AmmoPage() {
                             )}
 
                             <div className="flex items-center gap-2 ml-3.5">
-                              <button onClick={() => setAddModal(stock)} className="flex items-center gap-1 text-[10px] bg-[#00C853]/10 border border-[#00C853]/30 text-[#00C853] hover:bg-[#00C853]/20 px-2 py-1 rounded transition-colors">
-                                <Plus className="w-2.5 h-2.5" />Add Bags
+                    <button
+                      onClick={() => setEditModal(stock)}
+                      className="flex items-center gap-1 text-[10px] bg-vault-surface border border-vault-border text-vault-text-muted hover:text-[#00C2FF] hover:border-[#00C2FF]/40 px-2 py-1 rounded transition-colors"
+                    >
+                      <Pencil className="w-2.5 h-2.5" />
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => setAddModal(stock)}
+                      className="flex items-center gap-1 text-[10px] bg-[#00C853]/10 border border-[#00C853]/30 text-[#00C853] hover:bg-[#00C853]/20 px-2 py-1 rounded transition-colors"
+                    >
+                      <Plus className="w-2.5 h-2.5" />
+                      Add Bags
                               </button>
                               <button onClick={() => setLogModal(stock)} className="flex items-center gap-1 text-[10px] bg-[#F5A623]/10 border border-[#F5A623]/30 text-[#F5A623] hover:bg-[#F5A623]/20 px-2 py-1 rounded transition-colors">
                                 <TrendingDown className="w-2.5 h-2.5" />Log Use
+                              </button>
+                              <button
+                                onClick={() => handleDeleteStock(stock)}
+                                className="p-1.5 rounded text-vault-text-faint hover:text-[#E53935] hover:bg-[#E53935]/10 transition-colors"
+                                title="Delete lot"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
                               </button>
                               {stock.purchasePrice && (
                                 <span className="text-[10px] text-vault-text-faint font-mono ml-auto">€{stock.purchasePrice.toFixed(2)}</span>
@@ -403,8 +734,60 @@ export default function AmmoPage() {
         )}
       </div>
 
-      {addModal && <AddBBsModal stock={addModal} onClose={() => setAddModal(null)} onSuccess={handleQtyUpdate} />}
-      {logModal && <LogUseModal stock={logModal} onClose={() => setLogModal(null)} onSuccess={handleQtyUpdate} />}
+{/* Modals */}
+{addModal && (
+  <AddBBsModal
+    stock={addModal}
+    onClose={() => setAddModal(null)}
+    onSuccess={handleQtyUpdate}
+  />
+)}
+{logModal && (
+  <LogUseModal
+    stock={logModal}
+    onClose={() => setLogModal(null)}
+    onSuccess={handleQtyUpdate}
+  />
+)}
+{editModal && (
+  <EditAmmoModal
+    stock={editModal}
+    onClose={() => setEditModal(null)}
+    onSuccess={(updated) => {
+      handleStockEdit(updated);
+      setEditModal(null);
+    }}
+  />
+)}
+{deleteConfirmStock && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-vault-bg/80 backdrop-blur-sm">
+    <div className="bg-vault-surface border border-vault-border rounded-lg p-6 w-full max-w-sm">
+      <h3 className="text-sm font-semibold text-vault-text mb-2">Delete BB Stock?</h3>
+      <p className="text-xs text-vault-text-muted mb-1">
+        <span className="text-vault-text font-medium">{deleteConfirmStock.brand} · {deleteConfirmStock.caliber}</span>
+      </p>
+      <p className="text-xs text-vault-text-muted mb-4">
+        Game sessions that used this stock will be preserved, but the BB details will show as <span className="text-vault-text">Removed stock</span>.
+      </p>
+      <div className="flex gap-2 justify-end">
+        <button
+          onClick={() => setDeleteConfirmStock(null)}
+          className="px-3 py-1.5 text-xs rounded border border-vault-border text-vault-text-muted hover:text-vault-text transition-colors"
+          disabled={deleting}
+        >
+          Cancel
+        </button>
+        <button
+          onClick={confirmDeleteStock}
+          disabled={deleting}
+          className="px-3 py-1.5 text-xs rounded bg-[#E53935]/10 border border-[#E53935]/30 text-[#E53935] hover:bg-[#E53935]/20 transition-colors disabled:opacity-50"
+        >
+          {deleting ? "Deleting..." : "Delete Stock"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }

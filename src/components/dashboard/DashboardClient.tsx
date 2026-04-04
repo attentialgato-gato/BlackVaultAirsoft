@@ -273,7 +273,7 @@ function MaintenanceDueWidget() {
                     return (
                       <Link
                         key={item.id}
-                        href={`/accessories`}
+                        href={`/accessories/${item.id}`}
                         className="flex items-center justify-between px-4 py-3 hover:bg-vault-surface-2 transition-colors"
                       >
                         <div>
@@ -299,7 +299,7 @@ function MaintenanceDueWidget() {
                     return (
                       <Link
                         key={item.id}
-                        href={`/accessories`}
+                        href={`/accessories/${item.id}`}
                         className="flex items-center justify-between px-4 py-3 hover:bg-vault-surface-2 transition-colors"
                       >
                         <div>
@@ -442,7 +442,7 @@ function StatsWidget({ data }: { data: DashboardData }) {
   );
 }
 
-function LowAmmoWidget({ items }: { items: AmmoStockItem[] }) {
+function LowAmmoWidget({ items, totalStocks }: { items: AmmoStockItem[]; totalStocks: number }) {
   return (
     <section>
       <div className="flex items-center gap-2 mb-3">
@@ -462,7 +462,7 @@ function LowAmmoWidget({ items }: { items: AmmoStockItem[] }) {
             <div className="w-10 h-10 rounded-full bg-[#00C853]/10 border border-[#00C853]/20 flex items-center justify-center mx-auto mb-3">
               <Target className="w-5 h-5 text-[#00C853]" />
             </div>
-            <p className="text-sm text-vault-text-muted">All stocks are well supplied</p>
+            <p className="text-sm text-vault-text-muted">{totalStocks === 0 ? "No ammo entered" : "All stocks are well supplied"}</p>
           </div>
         ) : (
           <div className="divide-y divide-vault-border">
@@ -683,20 +683,9 @@ function AmmoSummaryWidget({ ammoStocks }: { ammoStocks: AmmoStockItem[] }) {
 export function DashboardClient({ data }: { data: DashboardData }) {
   const [liveData, setLiveData] = useState<DashboardData>(data);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [order, setOrder] = useState<string[]>(() => {
-    if (typeof window === "undefined") return DEFAULT_ORDER;
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (!saved) return DEFAULT_ORDER;
-      const parsed: string[] = JSON.parse(saved);
-      return [
-        ...parsed.filter((id) => DEFAULT_ORDER.includes(id)),
-        ...DEFAULT_ORDER.filter((id) => !parsed.includes(id)),
-      ];
-    } catch {
-      return DEFAULT_ORDER;
-    }
-  });
+  // Always initialise with DEFAULT_ORDER so server and client render identically,
+  // avoiding React hydration mismatch #418.  localStorage is read in useEffect below.
+  const [order, setOrder] = useState<string[]>(DEFAULT_ORDER);
   const [editMode, setEditMode] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [welcomeDismissed, setWelcomeDismissed] = useState(false);
@@ -729,6 +718,19 @@ export function DashboardClient({ data }: { data: DashboardData }) {
     setMounted(true);
     setWelcomeDismissed(localStorage.getItem("bv-welcome-dismissed") === "1");
     setSettingsHintDismissed(localStorage.getItem("bv-settings-hint-shown") === "1");
+    // Restore saved widget order now that we're safely on the client
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed: string[] = JSON.parse(saved);
+        setOrder([
+          ...parsed.filter((id) => DEFAULT_ORDER.includes(id)),
+          ...DEFAULT_ORDER.filter((id) => !parsed.includes(id)),
+        ]);
+      }
+    } catch {
+      // keep DEFAULT_ORDER
+    }
   }, []);
 
   useEffect(() => {
@@ -777,7 +779,7 @@ export function DashboardClient({ data }: { data: DashboardData }) {
       case "maintenance-due":
         return <MaintenanceDueWidget />;
       case "low-ammo":
-        return <LowAmmoWidget items={liveData.lowStockItems} />;
+        return <LowAmmoWidget items={liveData.lowStockItems} totalStocks={liveData.ammoStocks.length} />;
       case "recent":
         return <RecentWidget firearms={liveData.recentFirearms} />;
       case "ammo-summary":

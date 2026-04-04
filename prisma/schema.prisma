@@ -32,9 +32,10 @@ model Firearm {
   lastMaintenanceDate DateTime?
   maintenanceIntervalDays Int?
 
-  builds          Build[]
-  rangeSessions   RangeSession[]
-  documents       Document[]
+  builds           Build[]
+  rangeSessions    RangeSession[]
+  documents        Document[]
+  maintenanceLogs  MaintenanceLog[]
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -120,6 +121,8 @@ model Accessory {
   batteryType            String?
   lastBatteryChangeDate  DateTime?
   replacementIntervalDays Int?
+
+  batteryChangeLogs      BatteryChangeLog[]
 
   createdAt              DateTime        @default(now())
   updatedAt              DateTime        @updatedAt
@@ -214,15 +217,14 @@ model RangeSession {
 }
 
 model RangeSessionAmmoLink {
-  id             String       @id @default(cuid())
+  id             String        @id @default(cuid())
   rangeSessionId String
-  rangeSession   RangeSession @relation(fields: [rangeSessionId], references: [id], onDelete: Cascade)
-  ammoStockId    String
-  ammoStock      AmmoStock    @relation(fields: [ammoStockId], references: [id], onDelete: Cascade)
+  rangeSession   RangeSession  @relation(fields: [rangeSessionId], references: [id], onDelete: Cascade)
+  ammoStockId    String?
+  ammoStock      AmmoStock?    @relation(fields: [ammoStockId], references: [id], onDelete: SetNull)
   roundsUsed     Int
-  createdAt      DateTime     @default(now())
+  createdAt      DateTime      @default(now())
 
-  @@unique([rangeSessionId, ammoStockId])
   @@index([rangeSessionId])
   @@index([ammoStockId])
 }
@@ -255,8 +257,11 @@ model AmmoTransaction {
   quantity     Int
   previousQty  Int
   newQty       Int
-  note         String?
-  transactedAt DateTime @default(now())
+  note          String?
+  transactedAt  DateTime  @default(now())
+  purchasePrice Float?
+  pricePerRound Float?
+  purchaseDate  DateTime?
 
   @@index([stockId])
   @@index([transactedAt])
@@ -278,6 +283,37 @@ model ImageCache {
   cachedAt    DateTime @default(now())
 
   @@index([entityType, entityId])
+}
+
+// ─── BATTERY CHANGE LOG ───────────────────────────────────────
+
+model BatteryChangeLog {
+  id          String    @id @default(cuid())
+  accessoryId String
+  accessory   Accessory @relation(fields: [accessoryId], references: [id], onDelete: Cascade)
+  changedAt   DateTime  @default(now())
+  batteryType String?
+  notes       String?
+  createdAt   DateTime  @default(now())
+
+  @@index([accessoryId])
+  @@index([changedAt])
+}
+
+// ─── MAINTENANCE LOG ──────────────────────────────────────────
+
+model MaintenanceLog {
+  id         String   @id @default(cuid())
+  firearmId  String
+  firearm    Firearm  @relation(fields: [firearmId], references: [id], onDelete: Cascade)
+  date       DateTime
+  notes      String
+  roundCount Int?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([firearmId])
+  @@index([date])
 }
 
 // ─── SETTINGS ─────────────────────────────────────────────────

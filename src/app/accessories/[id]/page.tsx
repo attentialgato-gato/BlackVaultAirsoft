@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { formatCurrency, formatDate, formatNumber } from "@/lib/utils";
 import { ItemDocumentPanel } from "@/components/shared/ItemDocumentPanel";
 import { RoundCountBadge } from "@/components/shared/RoundCountBadge";
+import { RemoveImageButton } from "@/components/shared/RemoveImageButton";
 import {
   ArrowLeft,
   Shield,
@@ -19,6 +20,7 @@ import {
   ChevronDown,
   ChevronUp,
   Pencil,
+  BatteryCharging,
 } from "lucide-react";
 
 const SLOT_TYPE_LABELS: Record<string, string> = {
@@ -55,6 +57,13 @@ interface RoundCountLog {
   loggedAt: string;
 }
 
+interface BatteryChangeLog {
+  id: string;
+  changedAt: string;
+  batteryType: string | null;
+  notes: string | null;
+}
+
 interface CurrentBuild {
   id: string;
   name: string;
@@ -77,6 +86,9 @@ interface Accessory {
   roundCount: number;
   roundCountLogs: RoundCountLog[];
   currentBuild: CurrentBuild | null;
+  hasBattery: boolean;
+  batteryType: string | null;
+  batteryChangeLogs: BatteryChangeLog[];
 }
 
 const BARREL_TYPES = new Set(["BARREL", "SUPPRESSOR", "MUZZLE", "COMPENSATOR"]);
@@ -107,6 +119,14 @@ export default function AccessoryDetailPage() {
   // History expand
   const [historyExpanded, setHistoryExpanded] = useState(false);
 
+  // Battery change log
+  const [batteryLogOpen, setBatteryLogOpen] = useState(false);
+  const [batteryDate, setBatteryDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [batteryTypeInput, setBatteryTypeInput] = useState("");
+  const [batteryNotes, setBatteryNotes] = useState("");
+  const [batterySubmitting, setBatterySubmitting] = useState(false);
+  const [batteryError, setBatteryError] = useState<string | null>(null);
+
   useEffect(() => {
     if (!id) {
       setError("Invalid accessory route.");
@@ -121,6 +141,7 @@ export default function AccessoryDetailPage() {
           setError(data.error);
         } else {
           setAccessory(data);
+          setBatteryTypeInput(data.batteryType ?? "");
         }
         setLoading(false);
       })
@@ -166,6 +187,45 @@ export default function AccessoryDetailPage() {
     }
   }
 
+  async function submitBatteryChange(e: React.FormEvent) {
+    e.preventDefault();
+    setBatterySubmitting(true);
+    setBatteryError(null);
+
+    try {
+      const res = await fetch(`/api/accessories/${id}/battery-log`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          changedAt: batteryDate,
+          batteryType: batteryTypeInput || undefined,
+          notes: batteryNotes || undefined,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setBatteryError(json.error ?? "Failed to log battery change");
+      } else {
+        setAccessory((prev) =>
+          prev
+            ? {
+                ...prev,
+                batteryChangeLogs: [json, ...prev.batteryChangeLogs],
+                batteryType: batteryTypeInput || prev.batteryType,
+              }
+            : prev
+        );
+        setBatteryDate(new Date().toISOString().split("T")[0]);
+        setBatteryNotes("");
+        setBatteryLogOpen(false);
+      }
+    } catch {
+      setBatteryError("Network error");
+    } finally {
+      setBatterySubmitting(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-full">
@@ -188,6 +248,7 @@ export default function AccessoryDetailPage() {
 
   const roundColor = roundCountColor(accessory.roundCount, accessory.type);
   const visibleLogs = historyExpanded ? accessory.roundCountLogs : accessory.roundCountLogs.slice(0, 5);
+  const imageFilename = accessory.imageUrl ? accessory.imageUrl.split("/").pop() ?? "" : "";
 
   return (
     <div className="min-h-full">
@@ -217,13 +278,23 @@ export default function AccessoryDetailPage() {
             <ArrowLeft className="w-4 h-4" />
             Accessories
           </Link>
-          <Link
-            href={`/accessories/${id}/edit`}
-            className="flex items-center gap-1.5 text-sm bg-vault-bg/60 backdrop-blur-sm border border-[#1C2530]/60 text-vault-text-muted hover:text-vault-text px-3 py-1.5 rounded-md transition-colors"
-          >
-            <Pencil className="w-4 h-4" />
-            Edit
-          </Link>
+          <div className="flex items-center gap-2">
+            {accessory.imageUrl && imageFilename && (
+              <RemoveImageButton
+                filename={imageFilename}
+                entityType="accessory"
+                entityId={accessory.id}
+                onSuccess={() => setAccessory((prev) => prev ? { ...prev, imageUrl: null } : prev)}
+              />
+            )}
+            <Link
+              href={`/accessories/${id}/edit`}
+              className="flex items-center gap-1.5 text-sm bg-vault-bg/60 backdrop-blur-sm border border-[#1C2530]/60 text-vault-text-muted hover:text-vault-text px-3 py-1.5 rounded-md transition-colors"
+            >
+              <Pencil className="w-4 h-4" />
+              Edit
+            </Link>
+          </div>
         </div>
 
         <div className="absolute bottom-0 left-0 right-0 px-6 pb-4">
@@ -474,6 +545,148 @@ export default function AccessoryDetailPage() {
             )}
           </div>
         </div>
+
+        {/* Battery History */}
+        {accessory.hasBattery && (
+          <div>
+            <h2 className="text-sm font-semibold tracking-widest uppercase text-[#00C2FF] mb-3 flex items-center gap-2">
+              <BatteryCharging className="w-4 h-4" />
+              Battery History
+            </h2>
+
+            {/* Log Battery Change inline form */}
+            {batteryLogOpen && (
+              <div className="bg-vault-surface border border-[#00C2FF]/30 rounded-lg p-5 mb-4">
+                <h3 className="text-sm font-semibold text-[#00C2FF] mb-4 flex items-center gap-2">
+                  <BatteryCharging className="w-4 h-4" />
+                  Log Battery Change
+                </h3>
+                {batteryError && (
+                  <div className="flex items-center gap-2 bg-[#E53935]/10 border border-[#E53935]/30 rounded px-3 py-2 mb-4">
+                    <AlertCircle className="w-4 h-4 text-[#E53935] shrink-0" />
+                    <p className="text-xs text-[#E53935]">{batteryError}</p>
+                  </div>
+                )}
+                <form onSubmit={submitBatteryChange} className="flex items-end gap-3 flex-wrap">
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-widest text-vault-text-muted mb-1.5">
+                      Date <span className="text-[#E53935]">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={batteryDate}
+                      onChange={(e) => setBatteryDate(e.target.value)}
+                      required
+                      className="bg-vault-bg border border-vault-border text-vault-text rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#00C2FF] w-40"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-widest text-vault-text-muted mb-1.5">
+                      Battery Type
+                    </label>
+                    <input
+                      type="text"
+                      value={batteryTypeInput}
+                      onChange={(e) => setBatteryTypeInput(e.target.value)}
+                      placeholder="e.g. CR2032"
+                      className="bg-vault-bg border border-vault-border text-vault-text rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#00C2FF] w-32"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-48">
+                    <label className="block text-[10px] uppercase tracking-widest text-vault-text-muted mb-1.5">
+                      Notes
+                    </label>
+                    <input
+                      type="text"
+                      value={batteryNotes}
+                      onChange={(e) => setBatteryNotes(e.target.value)}
+                      placeholder="Optional notes"
+                      className="w-full bg-vault-bg border border-vault-border text-vault-text rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#00C2FF] placeholder-vault-text-faint"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setBatteryLogOpen(false)}
+                      className="px-3 py-2 text-sm text-vault-text-muted hover:text-vault-text border border-vault-border rounded-md transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={batterySubmitting}
+                      className="flex items-center gap-2 bg-[#00C2FF]/10 border border-[#00C2FF]/30 text-[#00C2FF] hover:bg-[#00C2FF]/20 disabled:opacity-50 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                      {batterySubmitting ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <Plus className="w-3 h-3" />
+                      )}
+                      Log
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            <div className="bg-vault-surface border border-vault-border rounded-lg overflow-hidden">
+              {!batteryLogOpen && (
+                <div className="px-4 py-3 border-b border-vault-border flex items-center justify-between">
+                  <span className="text-xs text-vault-text-muted">
+                    {accessory.batteryChangeLogs.length === 0
+                      ? "No battery changes logged"
+                      : `${accessory.batteryChangeLogs.length} change${accessory.batteryChangeLogs.length !== 1 ? "s" : ""} logged`}
+                  </span>
+                  <button
+                    onClick={() => setBatteryLogOpen(true)}
+                    className="flex items-center gap-1.5 text-xs bg-[#00C2FF]/10 border border-[#00C2FF]/30 text-[#00C2FF] hover:bg-[#00C2FF]/20 px-2.5 py-1 rounded transition-colors"
+                  >
+                    <Plus className="w-3 h-3" />
+                    Log Change
+                  </button>
+                </div>
+              )}
+              {accessory.batteryChangeLogs.length === 0 ? (
+                <div className="p-6 text-center">
+                  <p className="text-sm text-vault-text-muted">No battery changes logged yet.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[400px] text-sm">
+                    <thead>
+                      <tr className="border-b border-vault-border">
+                        <th className="text-left px-4 py-3 text-[10px] uppercase tracking-widest text-vault-text-faint font-medium">
+                          Date
+                        </th>
+                        <th className="text-left px-4 py-3 text-[10px] uppercase tracking-widest text-vault-text-faint font-medium">
+                          Battery Type
+                        </th>
+                        <th className="text-left px-4 py-3 text-[10px] uppercase tracking-widest text-vault-text-faint font-medium hidden md:table-cell">
+                          Notes
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-vault-border">
+                      {accessory.batteryChangeLogs.map((log) => (
+                        <tr key={log.id} className="hover:bg-vault-surface-2 transition-colors">
+                          <td className="px-4 py-3 text-xs text-vault-text-muted">
+                            {formatDate(log.changedAt)}
+                          </td>
+                          <td className="px-4 py-3 font-mono text-vault-text">
+                            {log.batteryType ?? <span className="text-vault-text-faint">—</span>}
+                          </td>
+                          <td className="px-4 py-3 text-xs text-vault-text-muted hidden md:table-cell">
+                            {log.notes ?? <span className="text-vault-text-faint">—</span>}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Current build info */}
         {accessory.currentBuild && (
