@@ -175,6 +175,7 @@ model AmmoStock {
   grainWeight     Float?
   // bulletType: "FMJ" | "HP" | "OTM" | "Frangible" | "Tracer" | "Subsonic" | "Other"
   bulletType      String?
+  color           String?
   quantity        Int               @default(0)
   purchasePrice   Float?
   pricePerRound   Float?

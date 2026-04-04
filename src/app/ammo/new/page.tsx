@@ -36,6 +36,7 @@ export default function NewAmmoStockPage() {
   const [caliberInput, setCaliberInput] = useState("");
   const [totalCost, setTotalCost] = useState("");
   const [pricePerRound, setPricePerRound] = useState("");
+  const [color, setColor] = useState("");
 const [numBags, setNumBags] = useState("");
 const [bbPerBag, setBbPerBag] = useState("");
 const [quantityValue, setQuantityValue] = useState("");
@@ -64,6 +65,7 @@ const [pendingPayload, setPendingPayload] = useState<Record<string, unknown> | n
       brand: data.get("brand") as string,
       grainWeight: bbPerBag ? Number(bbPerBag) : null,
       bulletType: (data.get("bulletType") as string) || null,
+      color: color || null,
       quantity: totalBBs,
       purchasePrice: totalCost ? Number(totalCost) : null,
       pricePerRound: pricePerRound ? Number(pricePerRound) : null,
@@ -193,12 +195,23 @@ const [pendingPayload, setPendingPayload] = useState<Record<string, unknown> | n
                 {formErrors.brand && <p className="text-xs mt-1" style={{ color: "#E53935" }}>{formErrors.brand}</p>}
               </div>
               <div>
-                <label htmlFor="bulletType" className={LABEL_CLASS}>Type</label>
-                <select id="bulletType" name="bulletType" className={INPUT_CLASS}>
-                  <option value="">Select type...</option>
-                  {BULLET_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </div>
+              <label htmlFor="bulletType" className={LABEL_CLASS}>Type</label>
+            <select id="bulletType" name="bulletType" className={INPUT_CLASS}>
+              <option value="">Select type...</option>
+              {BULLET_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="color" className={LABEL_CLASS}>Color</label>
+            <input
+              id="color"
+              type="text"
+              placeholder="e.g. White, Green, Black"
+              value={color}
+              onChange={(e) => setColor(e.target.value)}
+              className={INPUT_CLASS}
+            />
+          </div>
             </div>
           </fieldset>
 

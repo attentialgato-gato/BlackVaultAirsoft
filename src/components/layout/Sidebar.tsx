@@ -120,7 +120,7 @@ export function Sidebar({ mobileOnly = false, mobileOpen = false, onMobileClose 
             </Link>
           );
         })}
-
+        {/* AIRSOFT FORK: Range hidden - not relevant for airsoft
         <div>
           <button
             onClick={() => setRangeOpen((prev) => !prev)}
@@ -157,6 +157,7 @@ export function Sidebar({ mobileOnly = false, mobileOpen = false, onMobileClose 
             </div>
           )}
         </div>
+        */}
 
         <div className="pt-2 mt-2 border-t border-vault-border/70">
           {BOTTOM_NAV_ITEMS.map((item) => {

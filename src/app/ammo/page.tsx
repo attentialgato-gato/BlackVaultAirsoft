@@ -23,6 +23,7 @@ interface AmmoStock {
   caliber: string;
   brand: string;
   grainWeight: number | null;
+  color: string | null;
   bulletType: string | null;
   quantity: number;
   purchasePrice: number | null;
@@ -79,11 +80,10 @@ function AddBBsModal({ stock, onClose, onSuccess }: { stock: AmmoStock; onClose:
   const [pricePerRound, setPricePerRound] = useState("");
   const [purchaseDate, setPurchaseDate] = useState("");
 
-  function parsedQtyForCalc(): number {
-    const n = Number.parseInt(qty, 10);
-    return Number.isFinite(n) && n > 0 ? n : 0;
-  }
-
+ function parsedQtyForCalc(): number {
+  const n = Number.parseInt(bags, 10);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
   const bbPerBag = stock.grainWeight;
   const totalToAdd = bags && bbPerBag ? Number(bags) * bbPerBag : 0;
 
@@ -233,10 +233,19 @@ function EditAmmoModal({
 }) {
   const [caliber, setCaliber] = useState(stock.caliber);
   const [brand, setBrand] = useState(stock.brand);
-  const [grainWeight, setGrainWeight] = useState(stock.grainWeight?.toString() ?? "");
+const [grainWeight, setGrainWeight] = useState(stock.grainWeight?.toString() ?? "");
+const [numBags, setNumBags] = useState(
+  stock.grainWeight && stock.quantity
+    ? Math.round(stock.quantity / stock.grainWeight).toString()
+    : ""
+);
   const [bulletType, setBulletType] = useState(stock.bulletType ?? "");
   const [storageLocation, setStorageLocation] = useState(stock.storageLocation ?? "");
-  const [lowStockAlert, setLowStockAlert] = useState(stock.lowStockAlert?.toString() ?? "");
+  const [lowStockAlert, setLowStockAlert] = useState(
+    stock.lowStockAlert && stock.grainWeight
+      ? Math.round(stock.lowStockAlert / stock.grainWeight).toString()
+      : stock.lowStockAlert?.toString() ?? ""
+  );  
   const [notes, setNotes] = useState(stock.notes ?? "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -252,13 +261,16 @@ function EditAmmoModal({
     const res = await fetch(`/api/ammo/${stock.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        caliber: caliber.trim(),
-        brand: brand.trim(),
-        grainWeight: grainWeight ? Number(grainWeight) : null,
+     body: JSON.stringify({
+      caliber: caliber.trim(),
+      brand: brand.trim(),
+      grainWeight: grainWeight ? Number(grainWeight) : null,
+      quantity: grainWeight && numBags ? Number(numBags) * Number(grainWeight) : undefined,
         bulletType: bulletType.trim() || null,
         storageLocation: storageLocation.trim() || null,
-        lowStockAlert: lowStockAlert ? Number(lowStockAlert) : null,
+        lowStockAlert: lowStockAlert && grainWeight
+          ? Number(lowStockAlert) * Number(grainWeight)
+          : lowStockAlert ? Number(lowStockAlert) : null,
         notes: notes.trim() || null,
       }),
     });
@@ -309,18 +321,25 @@ function EditAmmoModal({
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[10px] uppercase tracking-widest text-vault-text-muted mb-1.5">BBs per Bag</label>
-              <VaultInput
-                type="number"
-                min={0}
-                step="1"
-                value={grainWeight}
-                onChange={(e) => setGrainWeight(e.target.value)}
-                placeholder="e.g. 4000"
-                className="w-full bg-vault-bg border border-vault-border text-vault-text rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#00C2FF] placeholder-vault-text-faint"
-              />
-            </div>
+           <div>
+                <label className="block text-[10px] uppercase tracking-widests text-vault-text-muted mb-1.5">
+                  Number of Bags
+                </label>
+                <VaultInput
+                  type="number"
+                  min={0}
+                  step="1"
+                  value={numBags}
+                  onChange={(e) => setNumBags(e.target.value)}
+                  placeholder="e.g. 5"
+                  className="w-full bg-vault-bg border border-vault-border text-vault-text rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#00C2FF] placeholder-vault-text-faint"
+                />
+                {grainWeight && numBags && (
+                  <p className="text-xs text-vault-text-faint mt-1">
+                    = {(Number(numBags) * Number(grainWeight)).toLocaleString()} BBs
+                  </p>
+                )}
+              </div>
             <div>
               <label className="block text-[10px] uppercase tracking-widest text-vault-text-muted mb-1.5">Type</label>
               <VaultInput
@@ -343,7 +362,7 @@ function EditAmmoModal({
             />
           </div>
           <div>
-            <label className="block text-[10px] uppercase tracking-widest text-vault-text-muted mb-1.5">Low Stock Alert (bags)</label>
+            <label className="block text-[10px] uppercase tracking-widest text-vault-text-muted mb-1.5">Low Stock Alert (Bags)</label>
             <VaultInput
               type="number"
               min={0}
@@ -630,8 +649,14 @@ const totalBBs = groups.reduce((sum, g) => sum + g.totalQuantity, 0);
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="text-right">
-                        <p className={`text-2xl font-bold font-mono tabular-nums ${totalColor}`}>{formatNumber(group.totalQuantity)}</p>
-                        <p className="text-[10px] text-vault-text-faint">BBs</p>
+                        <p className={`text-2xl font-bold font-mono tabular-nums ${totalColor}`}>
+                      {group.stocks[0]?.grainWeight
+                        ? toBags(group.totalQuantity, group.stocks[0].grainWeight)
+                        : formatNumber(group.totalQuantity)}
+                    </p>
+                    <p className="text-[10px] text-vault-text-faint">
+                      {group.stocks[0]?.grainWeight ? "" : "BBs"}
+                    </p>
                       </div>
                       {isExpanded ? <ChevronUp className="w-4 h-4 text-vault-text-faint shrink-0" /> : <ChevronDown className="w-4 h-4 text-vault-text-faint shrink-0" />}
                     </div>
@@ -655,6 +680,11 @@ const totalBBs = groups.reduce((sum, g) => sum + g.totalQuantity, 0);
                                   {stock.bulletType && (
                                     <span className="text-[10px] font-mono text-vault-text-faint border border-vault-border px-1.5 py-0.5 rounded">{stock.bulletType}</span>
                                   )}
+                                  {stock.color && (
+                                        <span className="text-[10px] font-mono text-vault-text-faint border border-vault-border px-1.5 py-0.5 rounded">
+                                          {stock.color}
+                                        </span>
+                                      )}
                                   {bbPerBag && (
                                     <span className="text-[10px] text-vault-text-faint">{bbPerBag.toLocaleString()} BBs/bag</span>
                                   )}

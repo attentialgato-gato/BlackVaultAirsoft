@@ -110,7 +110,7 @@ export default async function FirearmDetailPage({
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <p className="text-vault-text-muted text-sm">Failed to load firearm.</p>
-        <Link href="/vault" className="text-[#00C2FF] text-sm hover:underline">Back to vault</Link>
+        <Link href="/vault" className="text-[#00C2FF] text-sm hover:underline">Back to Vault</Link>
       </div>
     );
   }
@@ -220,7 +220,7 @@ export default async function FirearmDetailPage({
           <div className="bg-vault-surface border border-vault-border rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
               <DollarSign className="w-3.5 h-3.5 text-vault-text-faint" />
-              <p className="text-[10px] uppercase tracking-widest text-vault-text-faint">Paid</p>
+              <p className="text-[10px] uppercase tracking-widest text-vault-text-faint">Paid (€)</p>
             </div>
             <p className="text-sm font-mono text-vault-text">
               {firearm.purchasePrice != null && firearm.purchasePrice !== 0 ? formatCurrency(firearm.purchasePrice) : "—"}
@@ -265,7 +265,7 @@ export default async function FirearmDetailPage({
         <ItemDocumentPanel
           entityType="firearm"
           entityId={firearm.id}
-          title="Firearm Documents"
+          title="Replica Documents"
         />
 
         <div className="grid lg:grid-cols-[minmax(0,1fr)_320px] gap-6">
@@ -295,7 +295,7 @@ export default async function FirearmDetailPage({
               </div>
               <h3 className="text-sm font-semibold text-vault-text mb-2">No builds yet</h3>
               <p className="text-xs text-vault-text-muted mb-4 max-w-xs mx-auto">
-                Create a build to start configuring accessories and attachments for this firearm.
+                Create a build to start configuring accessories and attachments for this replica.
               </p>
               <Link
                 href={`/vault/${id}/builds/new`}
