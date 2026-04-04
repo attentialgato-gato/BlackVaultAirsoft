@@ -29,7 +29,7 @@ export default async function DashboardPage() {
     <div className="tactical-grid min-h-full">
       <PageHeader
         title="COMMAND CENTER"
-        subtitle="BlackVault Armory Platform — Tactical Inventory Overview"
+        subtitle="BlackVault Airsoft Platform — Tactical Inventory Overview"
       />
       <div className="px-4 sm:px-6 pt-4">
         <LanBanner />

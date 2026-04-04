@@ -5,6 +5,7 @@ export interface DashboardStatsResponse {
     firearms: number;
     accessories: number;
     ammoRounds: number;
+    ammoBags: number;
     ammoStocks: number;
   };
   investment: {
@@ -145,9 +146,12 @@ export async function getDashboardStats(): Promise<DashboardStatsResponse> {
   > = {};
 
   let totalAmmoRounds = 0;
-
-  for (const stock of ammoStocks) {
-    totalAmmoRounds += stock.quantity;
+let totalAmmoBags = 0;
+for (const stock of ammoStocks) {
+  totalAmmoRounds += stock.quantity;
+  if (stock.grainWeight && stock.grainWeight > 0) {
+    totalAmmoBags += Math.round(stock.quantity / stock.grainWeight);
+  }
 
     if (!ammoByCaliber[stock.caliber]) {
       ammoByCaliber[stock.caliber] = {
@@ -192,6 +196,7 @@ export async function getDashboardStats(): Promise<DashboardStatsResponse> {
       firearms: firearmCount,
       accessories: accessoryCount,
       ammoRounds: totalAmmoRounds,
+      ammoBags: totalAmmoBags,
       ammoStocks: ammoStocks.length,
     },
     investment: {
@@ -215,13 +220,14 @@ export async function getDashboardStats(): Promise<DashboardStatsResponse> {
       })),
       byCaliber: Object.values(ammoByCaliber).sort((a, b) => a.caliber.localeCompare(b.caliber)),
       lowStockCount: lowStockItems.length,
-      lowStockItems: lowStockItems.map((s) => ({
-        id: s.id,
-        caliber: s.caliber,
-        brand: s.brand,
-        quantity: s.quantity,
-        lowStockAlert: s.lowStockAlert,
-      })),
+     lowStockItems: lowStockItems.map((s) => ({
+      id: s.id,
+      caliber: s.caliber,
+      brand: s.brand,
+      quantity: s.quantity,
+      lowStockAlert: s.lowStockAlert,
+      grainWeight: s.grainWeight,
+    })),
     },
     recent: {
       firearms: recentFirearms,

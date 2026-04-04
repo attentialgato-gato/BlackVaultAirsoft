@@ -327,6 +327,7 @@ interface DashboardData {
   firearmCount: number;
   accessoryCount: number;
   totalAmmoRounds: number;
+  totalAmmoBags: number;  
   totalInvestment: number;
   lowStockItems: AmmoStockItem[];
   recentFirearms: RecentFirearm[];
@@ -420,9 +421,9 @@ function StatsWidget({ data }: { data: DashboardData }) {
       </Link>
       <Link href="/ammo" className="block group">
         <StatCard
-          label="Total Ammo Rounds"
-          value={formatNumber(data.totalAmmoRounds)}
-          subValue="across all calibers"
+          label="Total BBs"
+          value={data.totalAmmoBags > 0 ? `${formatNumber(data.totalAmmoBags)} bags` : formatNumber(data.totalAmmoRounds)}       
+          subValue="across all BB weights"
           icon={Target}
           accent="amber"
           className="group-hover:border-vault-accent/40 transition-colors cursor-pointer"
@@ -448,7 +449,7 @@ function LowAmmoWidget({ items, totalStocks }: { items: AmmoStockItem[]; totalSt
       <div className="flex items-center gap-2 mb-3">
         <AlertTriangle className="w-4 h-4 text-[#F5A623]" />
         <h2 className="text-sm font-semibold tracking-widest uppercase text-[#F5A623]">
-          Low Ammo Alerts
+          Low BBs Alerts
         </h2>
         {items.length > 0 && (
           <span className="ml-auto text-xs font-mono bg-[#F5A623]/10 border border-[#F5A623]/30 text-[#F5A623] px-2 py-0.5 rounded">
@@ -462,7 +463,7 @@ function LowAmmoWidget({ items, totalStocks }: { items: AmmoStockItem[]; totalSt
             <div className="w-10 h-10 rounded-full bg-[#00C853]/10 border border-[#00C853]/20 flex items-center justify-center mx-auto mb-3">
               <Target className="w-5 h-5 text-[#00C853]" />
             </div>
-            <p className="text-sm text-vault-text-muted">{totalStocks === 0 ? "No ammo entered" : "All stocks are well supplied"}</p>
+            <p className="text-sm text-vault-text-muted">{totalStocks === 0 ? "No BBs entered" : "All BB stocks are well supplied"}</p>
           </div>
         ) : (
           <div className="divide-y divide-vault-border">
@@ -494,11 +495,15 @@ function LowAmmoWidget({ items, totalStocks }: { items: AmmoStockItem[]; totalSt
                   </div>
                   <div className="text-right shrink-0">
                     <p className={`text-sm font-mono font-bold ${statusColor}`}>
-                      {formatNumber(item.quantity)}
-                    </p>
-                    <p className="text-xs text-vault-text-faint">
-                      alert: {formatNumber(item.lowStockAlert ?? 0)}
-                    </p>
+                    {item.grainWeight && item.grainWeight > 0
+                      ? `${Math.round(item.quantity / item.grainWeight)} bags`
+                      : formatNumber(item.quantity)}
+                  </p>
+                  <p className="text-xs text-vault-text-faint">
+                    alert: {item.grainWeight && item.grainWeight > 0
+                      ? `${Math.round((item.lowStockAlert ?? 0) / item.grainWeight)} bags`
+                      : formatNumber(item.lowStockAlert ?? 0)}
+                  </p>
                   </div>
                 </div>
               );
@@ -512,7 +517,7 @@ function LowAmmoWidget({ items, totalStocks }: { items: AmmoStockItem[]; totalSt
             href="/ammo"
             className="text-xs text-[#00C2FF] hover:text-[#00C2FF]/80 flex items-center gap-1 justify-end"
           >
-            View Ammo Depot
+            View BB Depot
             <ChevronRight className="w-3 h-3" />
           </Link>
         </div>
@@ -607,20 +612,25 @@ function RecentWidget({ firearms }: { firearms: RecentFirearm[] }) {
 }
 
 function AmmoSummaryWidget({ ammoStocks }: { ammoStocks: AmmoStockItem[] }) {
-  const byCaliber = ammoStocks.reduce<Record<string, number>>((acc, stock) => {
-    acc[stock.caliber] = (acc[stock.caliber] ?? 0) + stock.quantity;
+  const byCaliber = ammoStocks.reduce<Record<string, { bags: number; bbPerBag: number | null }>>((acc, stock) => {
+    const bags = stock.grainWeight && stock.grainWeight > 0
+      ? Math.round(stock.quantity / stock.grainWeight)
+      : stock.quantity;
+    if (!acc[stock.caliber]) {
+      acc[stock.caliber] = { bags: 0, bbPerBag: stock.grainWeight };
+    }
+    acc[stock.caliber].bags += bags;
     return acc;
   }, {});
-
-  const sorted = Object.entries(byCaliber).sort(([, a], [, b]) => b - a);
-  const maxQty = sorted[0]?.[1] ?? 1;
+  const sorted = Object.entries(byCaliber).sort(([, a], [, b]) => b.bags - a.bags);
+  const maxQty = sorted[0]?.[1].bags ?? 1;
 
   return (
     <section>
       <div className="flex items-center gap-2 mb-3">
         <Package className="w-4 h-4 text-[#00C853]" />
         <h2 className="text-sm font-semibold tracking-widest uppercase text-[#00C853]">
-          Ammo by Caliber
+          BBs by Weight
         </h2>
       </div>
       <div className="bg-vault-surface border border-vault-border rounded-lg overflow-hidden">
@@ -639,20 +649,20 @@ function AmmoSummaryWidget({ ammoStocks }: { ammoStocks: AmmoStockItem[] }) {
           </div>
         ) : (
           <div className="divide-y divide-vault-border">
-            {sorted.map(([caliber, qty]) => {
-              const pct = Math.round((qty / maxQty) * 100);
-              return (
-                <div key={caliber} className="flex items-center gap-4 px-4 py-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-mono font-semibold text-vault-text">
-                        {caliber}
-                      </span>
-                      <span className="text-sm font-mono font-bold text-[#00C853]">
-                        {formatNumber(qty)}
-                      </span>
-                    </div>
-                    <div className="w-full bg-vault-border rounded-full h-1">
+            {sorted.map(([caliber, data]) => {
+            const pct = Math.round((data.bags / maxQty) * 100);
+            return (
+              <div key={caliber} className="flex items-center gap-4 px-4 py-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-mono font-semibold text-vault-text">
+                      {caliber}
+                    </span>
+                    <span className="text-sm font-mono font-bold text-[#00C853]">
+                      {data.bags} bags
+                    </span>
+                  </div>
+                              <div className="w-full bg-vault-border rounded-full h-1">
                       <div
                         className="h-1 rounded-full bg-[#00C853] transition-all"
                         style={{ width: `${pct}%` }}
@@ -671,7 +681,7 @@ function AmmoSummaryWidget({ ammoStocks }: { ammoStocks: AmmoStockItem[] }) {
             href="/ammo"
             className="text-xs text-[#00C2FF] hover:text-[#00C2FF]/80 flex items-center gap-1 justify-end"
           >
-            View Ammo Depot
+            View BB Depot
             <ChevronRight className="w-3 h-3" />
           </Link>
         </div>
@@ -703,6 +713,7 @@ export function DashboardClient({ data }: { data: DashboardData }) {
         firearmCount: stats.totals?.firearms ?? 0,
         accessoryCount: stats.totals?.accessories ?? 0,
         totalAmmoRounds: stats.totals?.ammoRounds ?? 0,
+        totalAmmoBags: stats.totals?.ammoBags ?? 0,        
         totalInvestment: stats.investment?.totalCost ?? 0,
         lowStockItems: stats.ammo?.lowStockItems ?? [],
         recentFirearms: stats.recent?.firearms ?? [],

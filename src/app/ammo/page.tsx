@@ -606,8 +606,10 @@ const totalBBs = groups.reduce((sum, g) => sum + g.totalQuantity, 0);
           </div>
           <div className="w-px h-8 bg-vault-border" />
           <div>
-            <p className="text-[10px] uppercase tracking-widest text-vault-text-faint mb-0.5">Total BBs</p>
-            <p className="text-lg font-bold font-mono text-[#F5A623]">{formatNumber(totalBBs)}</p>
+            <p className="text-[10px] uppercase tracking-widest text-vault-text-faint mb-0.5">Total Bags</p>
+            <p className="text-lg font-bold font-mono text-[#F5A623]">
+            {groups.reduce((sum, g) => sum + g.stocks.reduce((s, stock) => s + (stock.grainWeight && stock.grainWeight > 0 ? Math.round(stock.quantity / stock.grainWeight) : 0), 0), 0)} bags
+            </p>
           </div>
         </div>
 
