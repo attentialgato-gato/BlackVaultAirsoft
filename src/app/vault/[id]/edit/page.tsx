@@ -38,6 +38,7 @@ interface Firearm {
   imageUrl: string | null;
   lastMaintenanceDate: string | null;
   maintenanceIntervalDays: number | null;
+  roundCount: number | null;
   builds: Build[];
   rangeSessionCount: number;
 }
