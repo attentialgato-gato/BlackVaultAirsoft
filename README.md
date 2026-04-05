@@ -172,7 +172,145 @@ http://localhost:3000
 
 ✅ **BlackVaultAirsoft is running.**
 
+---  -----------------------------------------------------------------------------------------------------------------------------------
+
+## Installation — Nas Synology  with Container Manager
+
+### Step 1 — Download BlackVaultAirsoft
+
+Go to the [BlackVaultAirsoft GitHub page](https://github.com/attentialgato-gato/BlackVaultAirsoft), click **Code → Download ZIP**, and save it somewhere you'll find it (e.g. your Desktop).
+
+
 ---
+
+
+## Step 2 — Prepare the NAS
+
+**1. Open File Station** in DSM and create this folder structure:
+
+```
+/volume1/docker/blackvaultairsoft/
+└── data/
+    ├── db/
+    └── uploads/
+```
+
+**2. Upload the project files**
+
+Upload the entire contents of the extracted `BlackVaultAirsoft` folder into `/volume1/docker/blackvaultairsoft/`.
+
+> To see hidden files (starting with `.`) in File Station: **Tools → Show hidden files**
+
+**3. Create the .env file**
+
+Right-click on `.env.example` → **Open with Text Editor**, edit the content:
+
+```env
+DATA_DIR=/volume1/docker/blackvaultairsoft/data
+PORT=3000
+```
+
+Then **Save As** → rename to `.env` → **Save**.
+
+
+**4. Edit docker-compose.yml** — right-click → Open with Text Editor, select all and replace with:
+
+```
+services:
+  blackvaultairsoft:
+    build
+    container_name: blackvaultairsoft
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/data/vault.db?connection_limit=1
+    volumes:
+      - /volume1/docker/blackvaultairsoft/data/db:/app/data
+      - /volume1/docker/blackvaultairsoft/data/uploads:/app/uploads
+     healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+```
+Save the file.
+
+---
+
+
+## Part 3 — Create the project in Container Manager
+
+1. Open **Container Manager**
+2. Go to **Project → Create**
+3. Fill in:
+   - **Project name:** `blackvaultairsoft`
+   - **Path:** `/volume1/docker/blackvaultairsoft/`
+4. Click **Next → Apply**
+
+Container Manager will build the image and start the container automatically. This may take a few minutes.
+
+---
+
+## Part 4 — Fix permissions (only if the container crashes on first start)
+
+If the container stops unexpectedly with a database error, you need to fix folder permissions via SSH.
+
+Enable SSH in DSM: **Control Panel → Terminal & SNMP → Enable SSH service**
+
+Then connect from your PC terminal (Mac/Linux) or PowerShell (Windows):
+
+```
+ssh your_user@NAS_IP
+```
+
+Run:
+
+```
+mkdir -p /volume1/docker/blackvaultairsoft/data/db
+mkdir -p /volume1/docker/blackvaultairsoft/data/uploads
+chmod -R 777 /volume1/docker/blackvaultairsoft/data
+```
+
+Then go back to Container Manager and **restart** the project.
+
+## Done!
+
+Open your browser and go to:
+```
+http://NAS_IP:3000
+```
+
+---
+
+## Backup
+
+Your data lives in `/volume1/docker/BlackVaultAirsoft/data/`. Copy that folder anywhere to back it up.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## BB Stock Management
 
