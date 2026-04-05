@@ -339,6 +339,7 @@ interface StatsResponse {
     firearms?: number;
     accessories?: number;
     ammoRounds?: number;
+    ammoBags?: number;
   };
   investment?: {
     totalCost?: number;
