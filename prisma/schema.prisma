@@ -31,7 +31,8 @@ model Firearm {
   // Maintenance tracking
   lastMaintenanceDate DateTime?
   maintenanceIntervalDays Int?
-
+  // BB count tracking
+  roundCount      Int?    @default(0)
   builds           Build[]
   rangeSessions    RangeSession[]
   documents        Document[]

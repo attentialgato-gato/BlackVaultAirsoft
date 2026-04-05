@@ -141,6 +141,7 @@ export default function EditFirearmPage() {
       imageSource: imageUrl ? "uploaded" : null,
       lastMaintenanceDate: (data.get("lastMaintenanceDate") as string) || null,
       maintenanceIntervalDays: data.get("maintenanceIntervalDays") ? Number(data.get("maintenanceIntervalDays")) : null,
+      roundCount: data.get("roundCount") ? Number(data.get("roundCount")) : null,
     };
 
     try {
@@ -487,7 +488,31 @@ export default function EditFirearmPage() {
               </div>
             </div>
           </fieldset>
-
+          
+           {/* BB Count */}
+            <fieldset className="bg-vault-surface border border-vault-border rounded-lg p-5 space-y-4">
+              <legend className="text-xs font-mono uppercase tracking-widest text-[#00C2FF] px-1 -ml-1">
+                BB Count
+              </legend>
+              <div>
+                <label htmlFor="roundCount" className={LABEL_CLASS}>
+                  Total BBs Fired
+                </label>
+                <input
+                  id="roundCount"
+                  name="roundCount"
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="e.g. 5000"
+                  defaultValue={firearm.roundCount ?? ""}
+                  className={INPUT_CLASS}
+                />
+                <p className="text-xs text-vault-text-faint mt-1">
+                  Update manually to track BBs fired without game sessions.
+                </p>
+              </div>
+            </fieldset>         
           {/* Image */}
           <fieldset className="bg-vault-surface border border-vault-border rounded-lg p-5 space-y-4">
             <legend className="text-xs font-mono uppercase tracking-widest text-[#00C2FF] px-1 -ml-1">
@@ -537,9 +562,7 @@ export default function EditFirearmPage() {
               {loading ? "Saving..." : success ? "Saved!" : "Save Changes"}
             </button>
           </div>
-        </form>
-
-        {/* Builds section */}
+        </form>{/* Builds section */}
         <div className="mt-8 border-t border-vault-border pt-6">
           <h3 className="text-xs font-mono uppercase tracking-widest text-vault-text-muted mb-3">Builds</h3>
           {firearm.builds.length === 0 ? (

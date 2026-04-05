@@ -187,7 +187,7 @@ export default async function FirearmDetailPage({
                 <span className="text-xs px-2 py-0.5 rounded border border-vault-border text-vault-text-muted font-mono">
                   {firearm.caliber}
                 </span>
-                <RoundCountBadge roundCount={firearm.rangeSessions.reduce((sum, session) => sum + session.roundsFired, 0)} />
+                <RoundCountBadge roundCount={firearm.roundCount ?? firearm.rangeSessions.reduce((sum, session) => sum + session.roundsFired, 0)} />
               </div>
               <h1 className="text-2xl font-bold text-vault-text leading-tight">{firearm.name}</h1>
               <p className="text-sm text-vault-text-muted mt-0.5">

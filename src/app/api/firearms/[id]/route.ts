@@ -88,6 +88,7 @@ export async function PUT(
       imageSource,
       lastMaintenanceDate,
       maintenanceIntervalDays,
+      roundCount,
     } = body;
 
     const existing = await prisma.firearm.findUnique({ where: { id } });
@@ -121,7 +122,8 @@ export async function PUT(
           lastMaintenanceDate: lastMaintenanceDate ? new Date(lastMaintenanceDate) : null,
         }),
         ...(maintenanceIntervalDays !== undefined && { maintenanceIntervalDays }),
-      },
+        ...(roundCount !== undefined && { roundCount }),
+              },
       include: {
         _count: {
           select: { builds: true },

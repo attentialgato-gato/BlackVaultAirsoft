@@ -34,14 +34,13 @@ export async function GET() {
         rangeSessions: {
           select: { roundsFired: true },
         },
-      },
+          },
       orderBy: { createdAt: "desc" },
     });
 
     const result = firearms.map((firearm) => ({
       ...firearm,
-      firearmRoundCount: firearm.rangeSessions.reduce((sum, session) => sum + session.roundsFired, 0),
-      serialNumber: decryptField(firearm.serialNumber) ?? firearm.serialNumber,
+      firearmRoundCount: firearm.roundCount ?? firearm.rangeSessions.reduce((sum, session) => sum + session.roundsFired, 0),      serialNumber: decryptField(firearm.serialNumber) ?? firearm.serialNumber,
       notes: firearm.notes,
       buildCount: firearm._count.builds,
       activeBuild: firearm.builds[0] ?? null,

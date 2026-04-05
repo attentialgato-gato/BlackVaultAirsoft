@@ -13,6 +13,9 @@ services:
       - NODE_ENV=development
       - DATABASE_URL=file:/app/data/vault.db?connection_limit=1
       - NEXT_TELEMETRY_DISABLED=1
+      - IMAGE_UPLOAD_DIR=/app/data/uploads
     volumes:
       - ${DATA_DIR:-./data}:/app/data
+      - ${DATA_DIR:-./data}/uploads:/app/uploads
       - /app/node_modules
+      
