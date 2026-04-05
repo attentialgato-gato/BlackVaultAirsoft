@@ -1,4 +1,4 @@
-# AirsoftVault
+# BlackVaultAIrsoft
 
 A self-hosted, local-only web app for tracking airsoft replicas, accessories, BB stocks. All data stays on your machine.
 
@@ -51,9 +51,9 @@ After installing, **open Docker Desktop and wait for it to fully load** before c
 
 ## Installation — Windows 🪟
 
-### Step 1 — Download AirsoftVault
+### Step 1 — Download BlackVaultAirsoft
 
-Go to the [BlackVault GitHub page](https://github.com/theaveragedeveloper/ProjectBlackVault), click **Code → Download ZIP**, and save it somewhere you'll find it (e.g. your Desktop).
+Go to the [BlackVaultAirsoft GitHub page](https://github.com/attentialgato-gato/BlackVaultAirsoft), click **Code → Download ZIP**, and save it somewhere you'll find it (e.g. your Desktop).
 
 ### Step 2 — Extract the ZIP
 
@@ -65,7 +65,7 @@ Open the extracted folder and **double-click `install.bat`**.
 
 > 💡 If it flashes and closes, open **Command Prompt** and run:
 > ```cmd
-> cd C:\path\to\ProjectBlackVaultAirsoft
+> cd C:\path\to\BlackVaultAirsoft
 > ```
 > Then:
 > ```cmd
@@ -78,7 +78,7 @@ The installer will ask two questions — press **Enter** to accept the defaults:
 
 It will then build and start AirsoftVault. **This can take 5–10 minutes the first time.**
 
-### Step 4 — Open AirsoftVault
+### Step 4 — Open BlackVaultAirsoft
 
 When the installer finishes, open your browser and go to:
 
@@ -101,7 +101,7 @@ Press `Cmd + Space`, type `Terminal`, and press Enter.
 Copy this command, paste it into Terminal, and press Enter:
 
 ```bash
-git clone [https://github.com/theaveragedeveloper/ProjectBlackVault.git](https://github.com/attentialgato-gato/BlackVaultAirsoft.git)
+git clone https://github.com/attentialgato-gato/BlackVaultAirsoft.git
 ```
 
 ### Step 3 — Go into the folder
@@ -120,9 +120,9 @@ The installer will ask two questions — press **Enter** to accept the defaults:
 - Where to store your data → press Enter
 - Which port to use → press Enter
 
-It will then build and start AirsoftVault. **This can take 5–10 minutes the first time.**
+It will then build and start BlackVaultAirsoft. **This can take 5–10 minutes the first time.**
 
-### Step 5 — Open AirsoftVault
+### Step 5 — Open BlackVaultAirsof
 
 When the installer finishes, open your browser and go to:
 
@@ -132,7 +132,7 @@ http://localhost:3000
 
 ✅ **BlackVaultAirsoft is running.**
 
-> 💡 **Don't have Git?** Go to the [GitHub page](https://github.com/attentialgato-gato/BlackVaultAirsof), click **Code → Download ZIP**, extract it, open Terminal in that folder, then start from Step 4.
+> 💡 **Don't have Git?** Go to the [GitHub page](https://github.com/attentialgato-gato/BlackVaultAirsoft), click **Code → Download ZIP**, extract it, open Terminal in that folder, then start from Step 4.
 
 ---
 
@@ -188,9 +188,9 @@ When adding a new BB stock you enter:
 
 ---
 
-## Stopping and Starting BlackVault
+## Stopping and Starting BlackVaultAirsoft
 
-**To stop BlackVault** (your data is never affected):
+**To stop BlackVaultAirsoft** (your data is never affected):
 
 ```bash
 docker compose down
@@ -333,7 +333,7 @@ Check the logs for a specific error message:
 docker compose logs -f
 ```
 
-Still stuck? Open a [GitHub issue](https://github.com/theaveragedeveloper/ProjectBlackVault/issues) and paste the log output.
+Still stuck? Open a [GitHub issue](https://github.com/attentialgato-gato/BlackVaultAirsoft/issues) and paste the log output.
 
 ---
 
@@ -341,7 +341,7 @@ Still stuck? Open a [GitHub issue](https://github.com/theaveragedeveloper/Projec
 
 You can open BlackVault on your phone as long as it's on the same Wi-Fi as your computer.
 
-1. Open BlackVault in your browser and go to **Settings**
+1. Open BlackVaultAirsoft in your browser and go to **Settings**
 2. The Settings page will detect your local IP and display a QR code
 3. Scan the QR code with your phone
 
@@ -358,7 +358,7 @@ BlackVault stores everything in a `data` folder inside the project directory by 
 ```
 data/
 ├── db/
-│   └── vault.db        ← your database (all firearms, accessories, sessions)
+│   └── vault.db        ← your database (all replicas, accessories, BB stocks)
 └── uploads/
     └── ...             ← uploaded images and documents
 ```
@@ -397,7 +397,7 @@ Your data folder is never touched during an update.
 
 **Step 1 —** Copy your `data` folder to the new machine (USB drive, network share, etc.)
 
-**Step 2 —** Download and extract BlackVault on the new machine
+**Step 2 —** Download and extract BlackVaultAirsoft on the new machine
 
 **Step 3 —** Run the installer (`install.bat` or `install.sh`) — when it asks where your data is, point it at the folder you copied
 
