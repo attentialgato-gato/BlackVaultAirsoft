@@ -10,6 +10,7 @@ async function getDashboardData() {
     firearmCount: stats.totals.firearms,
     accessoryCount: stats.totals.accessories,
     totalAmmoRounds: stats.totals.ammoRounds,
+    totalAmmoBags: stats.totals.ammoBags,
     totalInvestment: stats.investment.totalCost,
     lowStockItems: stats.ammo.stocks.filter(
       (stock) =>
