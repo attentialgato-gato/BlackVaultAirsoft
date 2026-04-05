@@ -124,6 +124,10 @@ export async function POST(request: NextRequest) {
     // If the user specified an initial round count (pre-existing use), log it as a range session
     const parsedInitialRounds = initialRoundCount ? Math.floor(Number(initialRoundCount)) : 0;
     if (parsedInitialRounds > 0) {
+      await prisma.firearm.update({
+        where: { id: firearm.id },
+        data: { roundCount: parsedInitialRounds },
+      });
       await prisma.rangeSession.create({
         data: {
           firearmId: firearm.id,
