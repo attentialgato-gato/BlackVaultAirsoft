@@ -1,4 +1,4 @@
-# BlackVaultAIrsoft
+# BlackVaultAirsoft
 
 A self-hosted, local-only web app for tracking airsoft replicas, accessories, BB stocks. All data stays on your machine.
 
@@ -122,7 +122,7 @@ The installer will ask two questions — press **Enter** to accept the defaults:
 
 It will then build and start BlackVaultAirsoft. **This can take 5–10 minutes the first time.**
 
-### Step 5 — Open BlackVaultAirsof
+### Step 5 — Open BlackVaultAirsoft
 
 When the installer finishes, open your browser and go to:
 
