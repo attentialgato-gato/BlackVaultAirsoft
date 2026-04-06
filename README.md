@@ -9,7 +9,7 @@ A self-hosted, local-only web app for tracking airsoft replicas, accessories, BB
 ![Dashboard](docs/screenshots/command.png)
 ![Vault](docs/screenshots/Replicas.png)
 ![Range Session](docs/screenshots/Accessories.png)
-![Settings](docs/screenshots/settings.png)
+![Settings](docs/screenshots/bbs.png)
 
 
 
