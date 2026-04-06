@@ -35,6 +35,20 @@ A self-hosted, local-only web app for tracking airsoft replicas, accessories, BB
 
 ---
 
+## BB Stock Management
+
+BlackVaultAirsoft tracks BBs by **weight group** (e.g. 0.25g) and within each group by **brand and type**.
+
+When adding a new BB stock you enter:
+- **BB Weight** — 0.20g to 0.40g
+- **Brand** — BLS, Geoffs, G&G, Valken...
+- **Type** — Bio, Non-Bio, Tracer Bio, Tracer Non-Bio
+- **Color** — White, Green, Black...
+- **Number of bags** + **BBs per bag** → total calculated automatically
+- **Low stock alert** in number of bags
+
+---
+
 ## Before You Start
 
 **The only thing you need to install is Docker Desktop.** It's free.
@@ -175,7 +189,7 @@ http://localhost:3000
 
 ---  -----------------------------------------------------------------------------------------------------------------------------------
 
-## Installation — Nas Synology  with Container Manager
+## Installation — Nas Synology with Container Manager 🗄️
 
 ### Step 1 — Download BlackVaultAirsoft
 
@@ -185,7 +199,7 @@ Go to the [BlackVaultAirsoft GitHub page](https://github.com/attentialgato-gato/
 ---
 
 
-## Step 2 — Prepare the NAS
+### Step 2 — Prepare the NAS
 
 **1. Open File Station** in DSM and create this folder structure:
 
@@ -241,7 +255,7 @@ Save the file.
 ---
 
 
-## Part 3 — Create the project in Container Manager
+### Step 3 — Create the project in Container Manager
 
 1. Open **Container Manager**
 2. Go to **Project → Create**
@@ -254,7 +268,7 @@ Container Manager will build the image and start the container automatically. Th
 
 ---
 
-## Part 4 — Fix permissions (only if the container crashes on first start)
+### ❌  Fix permissions (only if the container crashes on first start)
 
 If the container stops unexpectedly with a database error, you need to fix folder permissions via SSH.
 
@@ -287,43 +301,7 @@ http://NAS_IP:3000
 
 ## Backup
 
-Your data lives in `/volume1/docker/BlackVaultAirsoft/data/`. Copy that folder anywhere to back it up.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## BB Stock Management
-
-BlackVaultAirsoft tracks BBs by **weight group** (e.g. 0.25g) and within each group by **brand and type**.
-
-When adding a new BB stock you enter:
-- **BB Weight** — 0.20g to 0.40g
-- **Brand** — BLS, Geoffs, G&G, Valken...
-- **Type** — Bio, Non-Bio, Tracer Bio, Tracer Non-Bio
-- **Color** — White, Green, Black...
-- **Number of bags** + **BBs per bag** → total calculated automatically
-- **Low stock alert** in number of bags
+Your data lives in `/volume1/docker/blackvaultairsoft/data/`. Copy that folder anywhere to back it up.
 
 ---
 
