@@ -44,6 +44,7 @@ A self-hosted, local-only web app for tracking airsoft replicas, accessories, BB
 | 🪟 Windows | [Docker Desktop for Windows](https://docs.docker.com/desktop/setup/install/windows-install/) |
 | 🍎 Mac | [Docker Desktop for Mac](https://docs.docker.com/desktop/setup/install/mac-install/) |
 | 🐧 Linux | [Docker Engine install guide](https://docs.docker.com/engine/install/) |
+| 🗄️ Nas | [Container Manager Synology](https://www.synology.com/en-global/dsm/packages/ContainerManager) |
 
 After installing, **open Docker Desktop and wait for it to fully load** before continuing.
 
