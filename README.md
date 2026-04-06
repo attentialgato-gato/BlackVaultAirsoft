@@ -233,7 +233,7 @@ Then **Save As** → rename to `.env` → **Save**.
 ```
 services:
   blackvaultairsoft:
-    build
+    build: .
     container_name: blackvaultairsoft
     restart: unless-stopped
     ports:
@@ -244,7 +244,7 @@ services:
     volumes:
       - /volume1/docker/blackvaultairsoft/data/db:/app/data
       - /volume1/docker/blackvaultairsoft/data/uploads:/app/uploads
-     healthcheck:
+    healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
       interval: 30s
       timeout: 10s
