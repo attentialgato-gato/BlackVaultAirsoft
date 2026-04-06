@@ -651,14 +651,22 @@ const totalBBs = groups.reduce((sum, g) => sum + g.totalQuantity, 0);
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="text-right">
-                        <p className={`text-2xl font-bold font-mono tabular-nums ${totalColor}`}>
-                      {group.stocks[0]?.grainWeight
-                        ? toBags(group.totalQuantity, group.stocks[0].grainWeight)
-                        : formatNumber(group.totalQuantity)}
-                    </p>
-                    <p className="text-[10px] text-vault-text-faint">
-                      {group.stocks[0]?.grainWeight ? "" : "BBs"}
-                    </p>
+                            <p className={`text-2xl font-bold font-mono tabular-nums ${totalColor}`}>
+                              {group.stocks.some(s => s.grainWeight)
+                                ? (() => {
+                                    const totalBags = group.stocks.reduce((sum, s) =>
+                                      sum + (s.grainWeight && s.grainWeight > 0
+                                        ? s.quantity / s.grainWeight
+                                        : 0), 0);
+                                    return totalBags % 1 === 0
+                                      ? `${totalBags} bag${totalBags !== 1 ? "s" : ""}`
+                                      : `~${totalBags.toFixed(1)} bags`;
+                                  })()
+                                : formatNumber(group.totalQuantity)}
+                            </p>
+                            <p className="text-[10px] text-vault-text-faint">
+                              {group.stocks.some(s => s.grainWeight) ? "" : "BBs"}
+                            </p>
                       </div>
                       {isExpanded ? <ChevronUp className="w-4 h-4 text-vault-text-faint shrink-0" /> : <ChevronDown className="w-4 h-4 text-vault-text-faint shrink-0" />}
                     </div>
